@@ -9,7 +9,7 @@ import (
 func TestSetAndGet(t *testing.T) {
 	c := NewCache()
 	c.Set("key1", "val1", time.Second)
-	c.Set("key2", "val2", 2 * time.Second)
+	c.Set("key2", "val2", 2*time.Second)
 	c.Set("key3", "val3", time.Second)
 
 	if v, ok := c.Get("key1"); !ok || v != "val1" {

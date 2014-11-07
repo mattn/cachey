@@ -13,14 +13,16 @@ type item struct {
 }
 
 type cache struct {
-	items map[string]item
-	mutex sync.RWMutex
-	timer *time.Timer
+	items        map[string]item
+	mutex        sync.RWMutex
+	timer        *time.Timer
+	DurationOfGC time.Duration
 }
 
 func NewCache() *cache {
 	c := &cache{}
 	c.items = make(map[string]item)
+	c.DurationOfGC = 5
 	c.startGC()
 	return c
 }
@@ -69,10 +71,9 @@ func (c *cache) Delete(key string) (deleted interface{}, ok bool) {
 func (c *cache) startGC() {
 	var t *time.Timer
 	runtime.SetFinalizer(c, func(c *cache) {
-		println(1)
 		t.Stop()
 	})
-	t = time.AfterFunc(1, func() {
+	t = time.AfterFunc(c.DurationOfGC, func() {
 		keys := []string{}
 		c.mutex.RLock()
 		for k := range c.items {
@@ -90,6 +91,6 @@ func (c *cache) startGC() {
 			}
 			c.mutex.Unlock()
 		}
-		t.Reset(1)
+		t.Reset(c.DurationOfGC)
 	})
 }
