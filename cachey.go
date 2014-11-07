@@ -12,7 +12,7 @@ type item struct {
 	expire time.Time
 }
 
-type cache struct {
+type Cache struct {
 	items        map[string]item
 	mutex        sync.RWMutex
 	timer        *time.Timer
@@ -21,8 +21,8 @@ type cache struct {
 
 // NewCache returns a new cache. After calling NewCache, GC is started to
 // expire old items
-func NewCache() *cache {
-	c := &cache{}
+func NewCache() *Cache {
+	c := &Cache{}
 	c.items = make(map[string]item)
 	c.DurationOfGC = 5
 	c.startGC()
@@ -31,7 +31,7 @@ func NewCache() *cache {
 
 // Set store the value with specified key. This value is stored until while
 // expire's seconds.
-func (c *cache) Set(key string, value interface{}, expire time.Duration) {
+func (c *Cache) Set(key string, value interface{}, expire time.Duration) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 	c.items[key] = item{
@@ -43,7 +43,7 @@ func (c *cache) Set(key string, value interface{}, expire time.Duration) {
 // Get returns the value that is stored by specified key, and whether the value
 // is stored or not. If the value is not flushed, expire time will be updated
 // to next duration.
-func (c *cache) Get(key string) (interface{}, bool) {
+func (c *Cache) Get(key string) (interface{}, bool) {
 	c.mutex.RLock()
 	defer c.mutex.RUnlock()
 	item, ok := c.items[key]
@@ -59,7 +59,7 @@ func (c *cache) Get(key string) (interface{}, bool) {
 }
 
 // GetOrSet try to get and set combination.
-func (c *cache) GetOrSet(key string, code func() (interface{}, time.Duration)) (interface{}, bool) {
+func (c *Cache) GetOrSet(key string, code func() (interface{}, time.Duration)) (interface{}, bool) {
 	if value, ok := c.Get(key); ok {
 		return value, true
 	}
@@ -69,7 +69,7 @@ func (c *cache) GetOrSet(key string, code func() (interface{}, time.Duration)) (
 }
 
 // Delete deletes the value specified by key.
-func (c *cache) Delete(key string) (deleted interface{}, ok bool) {
+func (c *Cache) Delete(key string) (deleted interface{}, ok bool) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 	deleted, ok = c.items[key]
@@ -79,9 +79,9 @@ func (c *cache) Delete(key string) (deleted interface{}, ok bool) {
 
 // startGC make a timer of GC. It is possible to specify the duration of GC by
 // DurationOfGC.
-func (c *cache) startGC() {
+func (c *Cache) startGC() {
 	var t *time.Timer
-	runtime.SetFinalizer(c, func(c *cache) {
+	runtime.SetFinalizer(c, func(c *Cache) {
 		t.Stop()
 	})
 	t = time.AfterFunc(c.DurationOfGC, func() {
