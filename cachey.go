@@ -85,9 +85,10 @@ func (c *cache) startGC() {
 
 		for _, k := range keys {
 			c.mutex.Lock()
-			v := c.items[k]
-			if v.expire.Before(now) {
-				delete(c.items, k)
+			if v, ok := c.items[k]; ok {
+				if v.expire.Before(now) {
+					delete(c.items, k)
+				}
 			}
 			c.mutex.Unlock()
 		}
