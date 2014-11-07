@@ -19,6 +19,8 @@ type cache struct {
 	DurationOfGC time.Duration
 }
 
+// NewCache returns a new cache. After calling NewCache, GC is started to
+// expire old items
 func NewCache() *cache {
 	c := &cache{}
 	c.items = make(map[string]item)
@@ -27,6 +29,8 @@ func NewCache() *cache {
 	return c
 }
 
+// Set store the value with specified key. This value is stored until while
+// expire's seconds.
 func (c *cache) Set(key string, value interface{}, expire time.Duration) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
@@ -36,6 +40,9 @@ func (c *cache) Set(key string, value interface{}, expire time.Duration) {
 	}
 }
 
+// Get returns the value that is stored by specified key, and whether the value
+// is stored or not. If the value is not flushed, expire time will be updated
+// to next duration.
 func (c *cache) Get(key string) (interface{}, bool) {
 	c.mutex.RLock()
 	defer c.mutex.RUnlock()
@@ -51,6 +58,7 @@ func (c *cache) Get(key string) (interface{}, bool) {
 
 }
 
+// GetOrSet try to get and set combination.
 func (c *cache) GetOrSet(key string, code func() (interface{}, time.Duration)) (interface{}, bool) {
 	if value, ok := c.Get(key); ok {
 		return value, true
@@ -60,6 +68,7 @@ func (c *cache) GetOrSet(key string, code func() (interface{}, time.Duration)) (
 	return value, false
 }
 
+// Delete deletes the value specified by key.
 func (c *cache) Delete(key string) (deleted interface{}, ok bool) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
@@ -68,6 +77,8 @@ func (c *cache) Delete(key string) (deleted interface{}, ok bool) {
 	return
 }
 
+// startGC make a timer of GC. It is possible to specify the duration of GC by
+// DurationOfGC.
 func (c *cache) startGC() {
 	var t *time.Timer
 	runtime.SetFinalizer(c, func(c *cache) {
