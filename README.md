@@ -6,11 +6,25 @@ Expire-able cache
 
 ```go
 c := cachey.NewCache()
-c.Set("foo", "bar")
+c.Set("foo", "bar", 3)
 if v, ok := c.Get("foo"); ok {
     fmt.Println(v)
+} else {
+	fmt.Println("Not Found")
 }
-c.Delete("foo")
+
+time.Sleep(3 * time.Second)
+
+if v, ok := c.Get("foo"); ok {
+    fmt.Println(v)
+} else {
+	fmt.Println("Not Found")
+}
+```
+
+```
+bar
+Not Found
 ```
 
 ## Installation
